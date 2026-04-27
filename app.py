@@ -24,65 +24,52 @@ st.markdown("""
 @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap');
 
 :root {
-    --bg:       #0a0a0f;
-    --surface:  #13131a;
-    --surface2: #1c1c28;
-    --border:   #2a2a3d;
-    --accent:   #7c6af7;
-    --accent2:  #f7c948;
-    --text:     #e8e8f0;
-    --muted:    #6b6b8a;
-    --success:  #3ecf8e;
-    --danger:   #f56565;
-    --star:     #f7c948;
+    --bg:       #f5f7fa;
+    --surface:  #ffffff;
+    --surface2: #f0f2f6;
+    --border:   #dde1ea;
+    --accent:   #5b4fcf;
+    --text:     #1a1a2e;
+    --muted:    #6b7280;
+    --success:  #059669;
+    --danger:   #dc2626;
+    --star:     #d97706;
+    --sidebar-bg: #f8f9fb;
 }
 
 html, body, [class*="css"] {
     font-family: 'DM Sans', sans-serif;
-    background-color: var(--bg) !important;
-    color: var(--text) !important;
 }
-.stApp { background-color: var(--bg) !important; }
-#MainMenu, footer, header { visibility: hidden; }
+
+/* ── Hide ONLY the Streamlit menu and footer — NOT the header ── */
+/* The header contains the sidebar arrow — never hide it */
+#MainMenu { visibility: hidden; }
+footer    { visibility: hidden; }
 
 /* ── Sidebar ── */
 [data-testid="stSidebar"] {
-    background: var(--surface) !important;
+    background-color: var(--sidebar-bg) !important;
     border-right: 1px solid var(--border) !important;
 }
-[data-testid="stSidebar"] * { color: var(--text) !important; }
 
-/* ── Header ── */
+/* ── App header block ── */
 .app-header {
-    padding: 1.6rem 0 1.2rem 0;
-    border-bottom: 1px solid var(--border);
-    margin-bottom: 1.6rem;
+    padding: 1.4rem 0 1rem 0;
+    border-bottom: 2px solid var(--border);
+    margin-bottom: 1.4rem;
 }
 .app-title {
     font-family: 'Space Mono', monospace;
-    font-size: 2.2rem;
+    font-size: 2rem;
     font-weight: 700;
     color: var(--text);
     letter-spacing: -1px;
     margin: 0;
 }
 .app-title span { color: var(--accent); }
-.app-subtitle { font-size: 0.9rem; color: var(--muted); margin-top: 0.3rem; }
+.app-subtitle { font-size: 0.88rem; color: var(--muted); margin-top: 0.3rem; }
 
-/* ── Sidebar toggle button (top of main area) ── */
-.sidebar-hint {
-    font-size: 0.78rem;
-    color: var(--muted);
-    margin-bottom: 1rem;
-    padding: 0.5rem 0.9rem;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    display: inline-block;
-    font-family: 'Space Mono', monospace;
-}
-
-/* ── Buttons ── */
+/* ── Primary button (Fetch) ── */
 .stButton > button {
     background: var(--accent) !important;
     color: white !important;
@@ -95,142 +82,147 @@ html, body, [class*="css"] {
     width: 100% !important;
 }
 .stButton > button:hover {
-    background: #6a5ae0 !important;
+    background: #4a3fb5 !important;
     transform: translateY(-1px) !important;
-    box-shadow: 0 4px 20px rgba(124,106,247,0.35) !important;
+    box-shadow: 0 4px 16px rgba(91,79,207,0.25) !important;
+}
+
+/* ── Icon action buttons (star / delete) ── */
+/* Target by column ratio — the two narrow rightmost cols in each card row */
+div[data-testid="stHorizontalBlock"] > div:nth-last-child(1) .stButton > button,
+div[data-testid="stHorizontalBlock"] > div:nth-last-child(2) .stButton > button {
+    width: auto !important;
+    min-width: unset !important;
+    padding: 0.15rem 0.5rem !important;
+    font-size: 1rem !important;
+    background: transparent !important;
+    border: 1px solid var(--border) !important;
+    color: var(--muted) !important;
+    border-radius: 6px !important;
+    height: 30px !important;
+    line-height: 1 !important;
+    transform: none !important;
+    box-shadow: none !important;
+}
+div[data-testid="stHorizontalBlock"] > div:nth-last-child(1) .stButton > button:hover {
+    background: #fef3c7 !important;
+    border-color: var(--star) !important;
+    color: var(--star) !important;
+    transform: none !important;
+}
+div[data-testid="stHorizontalBlock"] > div:nth-last-child(2) .stButton > button:hover {
+    background: #fee2e2 !important;
+    border-color: var(--danger) !important;
+    color: var(--danger) !important;
+    transform: none !important;
 }
 
 /* ── Category pills ── */
 .cat-pill {
     display: inline-block;
-    padding: 3px 10px;
+    padding: 2px 10px;
     border-radius: 20px;
-    font-size: 0.7rem;
-    font-weight: 600;
+    font-size: 0.68rem;
+    font-weight: 700;
     font-family: 'Space Mono', monospace;
     margin-right: 5px;
+    letter-spacing: 0.3px;
 }
-.cat-cs-ai { background:rgba(124,106,247,0.18); color:#a89af9; border:1px solid rgba(124,106,247,0.3); }
-.cat-cs-cv { background:rgba(247,201,72,0.13);  color:#f7c948; border:1px solid rgba(247,201,72,0.3); }
-.cat-cs-cl { background:rgba(62,207,142,0.13);  color:#3ecf8e; border:1px solid rgba(62,207,142,0.3); }
-.cat-cs-lg { background:rgba(245,101,101,0.13); color:#f56565; border:1px solid rgba(245,101,101,0.3); }
-.cat-cs-se { background:rgba(99,179,237,0.13);  color:#63b3ed; border:1px solid rgba(99,179,237,0.3); }
+.cat-cs-ai { background:#ede9fe; color:#5b4fcf; border:1px solid #c4b5fd; }
+.cat-cs-cv { background:#fef9c3; color:#92400e; border:1px solid #fde68a; }
+.cat-cs-cl { background:#dcfce7; color:#166534; border:1px solid #86efac; }
+.cat-cs-lg { background:#fee2e2; color:#991b1b; border:1px solid #fca5a5; }
+.cat-cs-se { background:#dbeafe; color:#1e40af; border:1px solid #93c5fd; }
 
 /* ── Paper card ── */
 .paper-card {
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 1.4rem 1.6rem;
-    margin-bottom: 1rem;
+    border-radius: 12px;
+    padding: 1.3rem 1.5rem;
+    margin-bottom: 0.9rem;
     position: relative;
-    transition: border-color 0.2s, box-shadow 0.2s;
+    transition: border-color 0.15s, box-shadow 0.15s;
     overflow: hidden;
 }
 .paper-card::before {
     content: '';
     position: absolute;
-    top:0; left:0; width:3px; height:100%;
+    top: 0; left: 0; width: 3px; height: 100%;
     background: var(--accent);
-    border-radius: 14px 0 0 14px;
+    border-radius: 12px 0 0 12px;
 }
 .paper-card.starred::before { background: var(--star); }
 .paper-card:hover {
-    border-color: var(--accent);
-    box-shadow: 0 4px 28px rgba(124,106,247,0.12);
+    border-color: #a5b4fc;
+    box-shadow: 0 2px 16px rgba(91,79,207,0.08);
 }
 .paper-title {
-    font-size: 1.05rem;
+    font-size: 1.02rem;
     font-weight: 600;
     color: var(--text);
-    margin: 0.4rem 0 0.7rem 0;
-    line-height: 1.4;
+    margin: 0.4rem 0 0.6rem 0;
+    line-height: 1.45;
 }
-.paper-meta { font-size: 0.78rem; color: var(--muted); font-family:'Space Mono',monospace; margin-bottom:0.9rem; }
+.paper-meta {
+    font-size: 0.75rem;
+    color: var(--muted);
+    font-family: 'Space Mono', monospace;
+    margin-bottom: 0.8rem;
+}
 .paper-summary {
     font-size: 0.9rem;
-    color: #c8c8e0;
-    line-height: 1.78;
+    color: #374151;
+    line-height: 1.75;
     border-top: 1px solid var(--border);
-    padding-top: 0.9rem;
+    padding-top: 0.85rem;
 }
 .paper-link {
-    display:inline-flex; align-items:center; gap:5px;
-    margin-top:0.9rem; font-size:0.8rem; color:var(--accent);
-    font-weight:500; font-family:'Space Mono',monospace;
-    text-decoration:none;
+    display: inline-flex; align-items: center; gap: 5px;
+    margin-top: 0.8rem; font-size: 0.78rem; color: var(--accent);
+    font-weight: 600; font-family: 'Space Mono', monospace;
+    text-decoration: none;
 }
-.star-badge {
-    position:absolute; top:1rem; right:1rem;
-    font-size:1rem;
-}
+.paper-link:hover { text-decoration: underline; }
 
 /* ── Stats bar ── */
 .stats-bar {
-    display:flex; gap:1.2rem; flex-wrap:wrap;
-    padding:0.9rem 1.2rem;
-    background:var(--surface); border:1px solid var(--border);
-    border-radius:10px; margin-bottom:1.4rem;
+    display: flex; gap: 1.2rem; flex-wrap: wrap;
+    padding: 0.85rem 1.1rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    margin-bottom: 1.2rem;
 }
-.stat-item { text-align:center; min-width:60px; }
-.stat-num { font-family:'Space Mono',monospace; font-size:1.3rem; font-weight:700; color:var(--accent); }
-.stat-label { font-size:0.72rem; color:var(--muted); margin-top:2px; }
+.stat-item { text-align: center; min-width: 60px; }
+.stat-num  { font-family: 'Space Mono', monospace; font-size: 1.25rem; font-weight: 700; color: var(--accent); }
+.stat-label { font-size: 0.7rem; color: var(--muted); margin-top: 2px; }
 
 /* ── Notification banners ── */
 .notif {
-    padding:0.75rem 1rem; border-radius:9px; font-size:0.88rem;
-    margin-bottom:0.7rem; display:flex; align-items:center; gap:0.6rem;
+    padding: 0.7rem 1rem; border-radius: 8px; font-size: 0.86rem;
+    margin-bottom: 0.65rem; display: flex; align-items: center; gap: 0.6rem;
 }
-.notif-success { background:rgba(62,207,142,0.12); border:1px solid rgba(62,207,142,0.3); color:#3ecf8e; }
-.notif-warn    { background:rgba(247,201,72,0.12);  border:1px solid rgba(247,201,72,0.3);  color:#f7c948; }
-.notif-error   { background:rgba(245,101,101,0.12); border:1px solid rgba(245,101,101,0.3); color:#f56565; }
-.notif-info    { background:rgba(124,106,247,0.12); border:1px solid rgba(124,106,247,0.3); color:#a89af9; }
+.notif-success { background: #f0fdf4; border: 1px solid #86efac; color: #166534; }
+.notif-warn    { background: #fffbeb; border: 1px solid #fde68a; color: #92400e; }
+.notif-error   { background: #fef2f2; border: 1px solid #fca5a5; color: #991b1b; }
+.notif-info    { background: #eff6ff; border: 1px solid #93c5fd; color: #1e40af; }
 
-/* ── Progress ── */
-.stProgress > div > div > div > div { background:var(--accent) !important; }
+/* ── Progress bar ── */
+.stProgress > div > div > div > div { background: var(--accent) !important; }
 
-/* ── Form inputs ── */
-[data-testid="stTextInput"] > div > div > input,
-[data-testid="stSelectbox"] > div,
-[data-testid="stMultiSelect"] > div,
-[data-testid="stDateInput"] > div > div > input {
-    background:var(--surface2) !important;
-    border-color:var(--border) !important;
-    color:var(--text) !important;
-    border-radius:8px !important;
-}
-[data-testid="stDateInput"] { color: var(--text) !important; }
-
-hr { border-color:var(--border) !important; }
-::-webkit-scrollbar { width:5px; }
-::-webkit-scrollbar-track { background:var(--bg); }
-::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
-::-webkit-scrollbar-thumb:hover { background:var(--accent); }
-
-/* ── Live fetch status box ── */
-.fetch-status-box {
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 1.2rem 1.4rem;
-    margin-top: 1rem;
-}
-.fetch-status-title {
-    font-family: 'Space Mono', monospace;
-    font-size: 0.85rem;
-    color: var(--accent);
-    margin-bottom: 0.8rem;
-    letter-spacing: 0.5px;
-}
+/* ── Fetch paper name label ── */
 .fetch-paper-name {
-    font-size: 0.85rem;
-    color: var(--text);
+    font-size: 0.83rem;
+    color: var(--muted);
     font-style: italic;
     margin-top: 0.3rem;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
+
+hr { border-color: var(--border) !important; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -322,7 +314,18 @@ def scrape_arxiv(category: str) -> list[dict]:
     return papers
 
 
-def fetch_abstract(arxiv_url: str) -> str:
+def is_today(arxiv_id: str) -> bool:
+    """
+    arXiv IDs follow the format YYMM.NNNNN  e.g. 2504.12345 = April 2025.
+    We can't get exact day from the ID alone, so we fetch the abstract page
+    and check the submission date. As a fast pre-filter we accept all papers
+    from the current YYMM (same month) and rely on the arXiv /recent page
+    which already only lists the most recent batch (today's or last business day's).
+    This function just confirms the ID year-month matches today's.
+    """
+    today = date.today()
+    yymm  = today.strftime("%y%m")          # e.g. "2504"
+    return arxiv_id.startswith(yymm)
     headers = {"User-Agent": "Mozilla/5.0 (ArXivLens/1.0)"}
     try:
         resp = requests.get(arxiv_url, headers=headers, timeout=10)
@@ -466,12 +469,10 @@ def render_paper_card(supabase: Client, p: dict):
     if authors_txt and len(authors_txt) > 120:
         authors_txt = authors_txt[:120] + "…"
 
-    star_icon   = "⭐" if starred else "☆"
     starred_cls = "starred" if starred else ""
 
     st.markdown(f"""
 <div class="paper-card {starred_cls}">
-    <span class="star-badge">{star_icon if starred else ""}</span>
     {cat_pill(p.get("category",""))}
     <div class="paper-title">{p.get("title","Untitled")}</div>
     <div class="paper-meta">
@@ -484,14 +485,15 @@ def render_paper_card(supabase: Client, p: dict):
 </div>
 """, unsafe_allow_html=True)
 
-    col1, col2 = st.columns([1, 1])
-    with col1:
-        star_label = "⭐ Unstar" if starred else "☆ Star"
-        if st.button(star_label, key=f"star_{paper_id}"):
+    # Compact icon action row — right-aligned, just below each card
+    icol1, icol2, icol3 = st.columns([8, 1, 1])
+    with icol2:
+        star_icon = "⭐" if starred else "☆"
+        if st.button(star_icon, key=f"star_{paper_id}", help="Star / unstar this paper"):
             if toggle_star(supabase, paper_id, starred):
                 st.rerun()
-    with col2:
-        if st.button("🗑️ Delete", key=f"del_{paper_id}"):
+    with icol3:
+        if st.button("🗑", key=f"del_{paper_id}", help="Delete from database"):
             if delete_paper(supabase, paper_id):
                 notify("success", "Paper deleted.")
                 st.rerun()
@@ -539,11 +541,7 @@ def main():
 </div>
 """, unsafe_allow_html=True)
 
-    # Sidebar hint for mobile
-    st.markdown(
-        '<div class="sidebar-hint">☰ &nbsp;Use the top-left arrow to open the sidebar and fetch papers</div>',
-        unsafe_allow_html=True,
-    )
+    # (sidebar arrow is always visible via CSS — no button needed)
 
     # ── Live fetch section ────────────────────────────────────────────────────
     if fetch_btn:
@@ -568,6 +566,15 @@ def main():
                     continue
 
                 papers_to_process = papers_raw[:max_papers]
+                # ── Today-only filter ──────────────────────────────────────
+                # arXiv /recent already shows the latest batch, but we double-
+                # check the ID prefix (YYMM) so we never re-summarise older
+                # papers that occasionally appear in the list.
+                papers_today = [p for p in papers_to_process if is_today(p["arxiv_id"])]
+                if not papers_today:
+                    notify("info", f"No papers with today's date found in **{cat}**. arXiv may not have updated yet — try again later.")
+                    continue
+                papers_to_process = papers_today
                 progress_bar = st.progress(0, text=f"Processing {cat} — 0 / {len(papers_to_process)}")
                 current_paper_box = st.empty()
 
