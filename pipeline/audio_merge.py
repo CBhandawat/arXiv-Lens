@@ -1,40 +1,51 @@
 import io
-from pydub import AudioSegment
+import subprocess
+import tempfile
+import os
 
 
-# Silence gap between turns (milliseconds)
 TURN_GAP_MS = 600
-
-# Slightly longer gap between host switches (gives a natural conversational pause)
 HOST_SWITCH_GAP_MS = 900
 
 
 def merge_audio(chunks: list[bytes], turns: list[dict]) -> bytes:
-    """
-    Merge a list of MP3 byte chunks into a single MP3.
-    Inserts silence gaps between turns, with longer gaps on host switches.
+    with tempfile.TemporaryDirectory() as tmp:
+        file_list = []
 
-    Args:
-        chunks: list of raw MP3 bytes, one per dialogue turn
-        turns:  list of {"host": str, "text": str} dicts (same order as chunks)
+        for i, (chunk, turn) in enumerate(zip(chunks, turns)):
+            # Write audio chunk
+            chunk_path = os.path.join(tmp, f"turn_{i}.mp3")
+            with open(chunk_path, "wb") as f:
+                f.write(chunk)
+            file_list.append(chunk_path)
 
-    Returns:
-        Single MP3 as bytes
-    """
-    combined = AudioSegment.empty()
+            # Write silence gap
+            if i < len(chunks) - 1:
+                prev_host = turn["host"]
+                next_host = turns[i + 1]["host"]
+                gap_ms = HOST_SWITCH_GAP_MS if prev_host != next_host else TURN_GAP_MS
+                gap_path = os.path.join(tmp, f"gap_{i}.mp3")
+                subprocess.run([
+                    "ffmpeg", "-y", "-f", "lavfi",
+                    "-i", f"anullsrc=r=24000:cl=mono",
+                    "-t", str(gap_ms / 1000),
+                    "-q:a", "9", "-acodec", "libmp3lame",
+                    gap_path
+                ], check=True, capture_output=True)
+                file_list.append(gap_path)
 
-    for i, (chunk, turn) in enumerate(zip(chunks, turns)):
-        segment = AudioSegment.from_file(io.BytesIO(chunk), format="mp3")
+        # Write concat list
+        list_path = os.path.join(tmp, "files.txt")
+        with open(list_path, "w") as f:
+            for p in file_list:
+                f.write(f"file '{p}'\n")
 
-        if i > 0:
-            prev_host = turns[i - 1]["host"]
-            curr_host = turn["host"]
-            gap_ms = HOST_SWITCH_GAP_MS if prev_host != curr_host else TURN_GAP_MS
-            combined += AudioSegment.silent(duration=gap_ms)
+        # Merge
+        out_path = os.path.join(tmp, "output.mp3")
+        subprocess.run([
+            "ffmpeg", "-y", "-f", "concat", "-safe", "0",
+            "-i", list_path, "-c", "copy", out_path
+        ], check=True, capture_output=True)
 
-        combined += segment
-
-    # Export to bytes
-    output = io.BytesIO()
-    combined.export(output, format="mp3", bitrate="128k")
-    return output.getvalue()
+        with open(out_path, "rb") as f:
+            return f.read()
