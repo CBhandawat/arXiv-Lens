@@ -1,8 +1,9 @@
 """
-daily_runner.py — Entry point for the AWS Lambda / ECS scheduled task.
+daily_runner.py — Entry point for GitHub Actions scheduled run.
 
-Triggered by EventBridge at 07:00 UTC daily.
-Produces 5 podcast episodes and delivers them via WhatsApp + Email.
+Runs daily at 16:15 IST (10:45 UTC).
+Produces 5 podcast episodes and delivers them via WhatsApp directly as audio files.
+No S3 or cloud storage needed.
 """
 
 import os
@@ -17,13 +18,12 @@ from pipeline.scraper import scrape_recent, fetch_abstract
 from pipeline.scriptwriter import generate_script
 from pipeline.tts import synthesize_turn
 from pipeline.audio_merge import merge_audio
-from pipeline.uploader import upload_to_s3, get_existing_url
 from pipeline.whatsapp import send_whatsapp_digest
 
 
 # ── Config ────────────────────────────────────────────────────────────────────
-CATEGORIES = ["cs.AI", "cs.LG", "cs.CL"]   # rotated through to get variety
-PAPERS_PER_CATEGORY = 3                      # scrape more than needed, pick best
+CATEGORIES     = ["cs.AI", "cs.LG", "cs.CL"]
+PAPERS_PER_CAT = 3
 TARGET_EPISODES = 5
 
 
@@ -31,10 +31,10 @@ def run_daily():
     print(f"[runner] ArXiv Cast daily run — {date.today()}")
     episodes = []
 
-    # ── Step 1: Scrape enough papers ─────────────────────────────────────────
+    # ── Step 1: Scrape candidates ─────────────────────────────────────────────
     candidates = []
     for cat in CATEGORIES:
-        papers = scrape_recent(cat, max_papers=PAPERS_PER_CATEGORY)
+        papers = scrape_recent(cat, max_papers=PAPERS_PER_CAT)
         candidates.extend(papers)
         print(f"[runner] Scraped {len(papers)} from {cat}")
 
@@ -42,37 +42,24 @@ def run_daily():
         print("[runner] No papers scraped. Exiting.")
         return
 
-    # ── Step 2: Process up to TARGET_EPISODES ────────────────────────────────
+    # ── Step 2: Generate + synthesize each episode ────────────────────────────
     for paper in candidates:
         if len(episodes) >= TARGET_EPISODES:
             break
 
-        arxiv_id = paper["arxiv_id"]
         print(f"[runner] Processing: {paper['title'][:60]}")
-
-        # Check S3 cache — skip if already done today
-        cached = get_existing_url(arxiv_id)
-        if cached:
-            print(f"[runner] Cache hit for {arxiv_id} — reusing")
-            episodes.append({
-                "title":     paper["title"],
-                "authors":   paper.get("authors", ""),
-                "arxiv_url": paper["arxiv_url"],
-                "audio_url": cached,
-            })
-            continue
 
         # Fetch abstract
         abstract = fetch_abstract(paper["arxiv_url"])
         if not abstract:
-            print(f"[runner] No abstract for {arxiv_id}, skipping")
+            print(f"[runner] No abstract, skipping")
             continue
 
-        # Generate script
+        # Generate dialogue script
         try:
             script = generate_script(paper["title"], abstract)
         except Exception as e:
-            print(f"[runner] Script generation failed: {e}")
+            print(f"[runner] Script failed: {e}")
             continue
 
         # TTS synthesis
@@ -90,45 +77,38 @@ def run_daily():
         try:
             mp3_bytes = merge_audio(chunks, script["turns"])
         except Exception as e:
-            print(f"[runner] Audio merge failed: {e}")
-            continue
-
-        # Upload to S3
-        try:
-            audio_url = upload_to_s3(mp3_bytes, arxiv_id)
-        except Exception as e:
-            print(f"[runner] S3 upload failed: {e}")
+            print(f"[runner] Merge failed: {e}")
             continue
 
         episodes.append({
             "title":     paper["title"],
-            "authors":   paper.get("authors", ""),
             "arxiv_url": paper["arxiv_url"],
-            "audio_url": audio_url,
+            "mp3_bytes": mp3_bytes,        # passed directly to WhatsApp
         })
         print(f"[runner] ✓ Episode {len(episodes)}/{TARGET_EPISODES} ready")
 
     if not episodes:
-        print("[runner] No episodes generated. Nothing to send.")
+        print("[runner] No episodes generated.")
         return
 
-    print(f"[runner] Generated {len(episodes)} episodes. Sending digest...")
-
-    # ── Step 3: Deliver ───────────────────────────────────────────────────────
+    # ── Step 3: Send via WhatsApp ─────────────────────────────────────────────
+    print(f"[runner] Sending {len(episodes)} episodes via WhatsApp...")
     try:
         send_whatsapp_digest(episodes)
-        print(f"[runner] ✓ Daily digest delivered via WhatsApp ({len(episodes)} episodes)")
+        print("[runner] ✓ Digest delivered successfully")
     except Exception as e:
-        print(f"[runner] WhatsApp send failed: {e}")
+        print(f"[runner] WhatsApp delivery failed: {e}")
 
-# ── Lambda handler ────────────────────────────────────────────────────────────
-def lambda_handler(event, context):
-    """AWS Lambda entry point."""
-    result = run_daily()
     return {
-        "statusCode": 200,
-        "body": json.dumps(result),
+        "date":     str(date.today()),
+        "episodes": len(episodes),
     }
+
+
+# ── Lambda handler (kept for compatibility) ───────────────────────────────────
+def lambda_handler(event, context):
+    result = run_daily()
+    return {"statusCode": 200, "body": json.dumps(result)}
 
 
 if __name__ == "__main__":
