@@ -2,16 +2,18 @@
 daily_runner.py — Entry point for GitHub Actions scheduled run.
 
 Runs daily at 16:15 IST (10:45 UTC).
-Produces 5 podcast episodes and delivers them via WhatsApp directly as audio files.
-No S3 or cloud storage needed.
+
+Produces 5 podcast episodes and delivers them via WhatsApp directly as audio
+files using WASenderAPI. No S3 or cloud storage needed — audio is uploaded
+to WASenderAPI's temporary media hosting and delivered as a voice note.
 """
 
 import os
 import time
 import json
 from datetime import date
-from dotenv import load_dotenv
 
+from dotenv import load_dotenv
 load_dotenv()
 
 from pipeline.scraper import scrape_recent, fetch_abstract
@@ -20,15 +22,16 @@ from pipeline.tts import synthesize_turn
 from pipeline.audio_merge import merge_audio
 from pipeline.whatsapp import send_whatsapp_digest
 
-
 # ── Config ────────────────────────────────────────────────────────────────────
-CATEGORIES     = ["cs.AI", "cs.LG", "cs.CL"]
+
+CATEGORIES = ["cs.AI", "cs.LG", "cs.CL"]
 PAPERS_PER_CAT = 3
 TARGET_EPISODES = 5
 
 
 def run_daily():
     print(f"[runner] ArXiv Cast daily run — {date.today()}")
+
     episodes = []
 
     # ── Step 1: Scrape candidates ─────────────────────────────────────────────
@@ -81,17 +84,18 @@ def run_daily():
             continue
 
         episodes.append({
-            "title":     paper["title"],
+            "title": paper["title"],
             "arxiv_url": paper["arxiv_url"],
-            "mp3_bytes": mp3_bytes,        # passed directly to WhatsApp
+            "mp3_bytes": mp3_bytes,  # uploaded to WASenderAPI in whatsapp.py
         })
+
         print(f"[runner] ✓ Episode {len(episodes)}/{TARGET_EPISODES} ready")
 
     if not episodes:
         print("[runner] No episodes generated.")
         return
 
-    # ── Step 3: Send via WhatsApp ─────────────────────────────────────────────
+    # ── Step 3: Send via WhatsApp (WASenderAPI) ───────────────────────────────
     print(f"[runner] Sending {len(episodes)} episodes via WhatsApp...")
     try:
         send_whatsapp_digest(episodes)
@@ -100,12 +104,13 @@ def run_daily():
         print(f"[runner] WhatsApp delivery failed: {e}")
 
     return {
-        "date":     str(date.today()),
+        "date": str(date.today()),
         "episodes": len(episodes),
     }
 
 
 # ── Lambda handler (kept for compatibility) ───────────────────────────────────
+
 def lambda_handler(event, context):
     result = run_daily()
     return {"statusCode": 200, "body": json.dumps(result)}
