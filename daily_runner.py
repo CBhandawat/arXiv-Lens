@@ -59,7 +59,7 @@ def run_daily():
         try:
             script = generate_script(paper["title"], abstract)
         except Exception as e:
-            print(f"[runner] Script failed: {e}")
+            print(f"[runner] Script failed: {type(e).__name__}: {e}")
             continue
 
         # TTS synthesis
