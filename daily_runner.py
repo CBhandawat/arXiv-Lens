@@ -19,7 +19,6 @@ from pipeline.tts import synthesize_turn
 from pipeline.audio_merge import merge_audio
 from pipeline.uploader import upload_to_s3, get_existing_url
 from pipeline.whatsapp import send_whatsapp_digest
-from pipeline.emailer import send_email_digest
 
 
 # ── Config ────────────────────────────────────────────────────────────────────
@@ -116,32 +115,11 @@ def run_daily():
     print(f"[runner] Generated {len(episodes)} episodes. Sending digest...")
 
     # ── Step 3: Deliver ───────────────────────────────────────────────────────
-    errors = []
-
     try:
         send_whatsapp_digest(episodes)
+        print(f"[runner] ✓ Daily digest delivered via WhatsApp ({len(episodes)} episodes)")
     except Exception as e:
-        errors.append(f"WhatsApp: {e}")
         print(f"[runner] WhatsApp send failed: {e}")
-
-    try:
-        send_email_digest(episodes)
-    except Exception as e:
-        errors.append(f"Email: {e}")
-        print(f"[runner] Email send failed: {e}")
-
-    if errors:
-        print(f"[runner] Completed with errors: {errors}")
-    else:
-        print(f"[runner] ✓ Daily digest delivered successfully ({len(episodes)} episodes)")
-
-    # Return structured result (useful when Lambda captures the response)
-    return {
-        "date":     str(date.today()),
-        "episodes": len(episodes),
-        "errors":   errors,
-    }
-
 
 # ── Lambda handler ────────────────────────────────────────────────────────────
 def lambda_handler(event, context):
